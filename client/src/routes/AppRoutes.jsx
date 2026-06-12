@@ -1,0 +1,16 @@
+import React from "react";
+import { Routes, Route } from "react-router-dom";
+
+import Home from "../pages/Home";
+import VideoRoom from "../pages/VideoRoom";
+
+function AppRoutes() {
+    return(
+        <Routes>
+            <Route path="/" element={<Home/>} />
+            <Route path="/video" element={<VideoRoom/>} />
+        </Routes>
+    );
+}
+
+export default AppRoutes;
