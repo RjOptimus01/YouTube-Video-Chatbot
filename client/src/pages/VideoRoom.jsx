@@ -1,18 +1,31 @@
 import React from "react";
 import { useLocation } from "react-router-dom";
 
+import NavBar from "../components/Navbar";
+import VideoPlayer from "../components/VideoPlayer";
+import VideoInfo from "../components/VideoInfo";
+import Tabs from "../components/Tabs";
+import "../styles/videoRoom.css"
+
 function VideoRoom() {
     const location = useLocation();
     const videoUrl = location.state?.videoUrl;
+    const video = location.state?.video;
 
     return (
-        <div>
-            <h1>Video Room</h1>
+        <>
+            <NavBar />
+            <div className="video-room">
+                <div className="left-panel">
+                    <VideoPlayer video={video}></VideoPlayer>
+                    <VideoInfo video={video}></VideoInfo>
+                </div>
 
-            <h3>Youtube URL: </h3>
-            
-            <p>{videoUrl}</p>
-        </div>
+                <div className="right-panel">
+                    <Tabs></Tabs>
+                </div>
+            </div>
+        </>
     );
 }
 

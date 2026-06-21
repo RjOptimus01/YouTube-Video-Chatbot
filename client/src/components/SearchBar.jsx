@@ -38,6 +38,7 @@ function SearchBar() {
                 navigate("/video", {
                     state: {
                         videoUrl,
+                        video: response.data.video,
                     },
                 });
             } else {
