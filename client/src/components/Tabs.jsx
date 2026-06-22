@@ -1,10 +1,11 @@
 import "../styles/videoRoom.css"
 import React, { useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
-function Tabs({ transcript, loadingTranscript, summary, loadingSummary,fetchSummary, playerRef }) {
+function Tabs({ transcript, loadingTranscript, summary, loadingSummary,fetchSummary, notes, loadingNotes, fetchNotes, playerRef }) {
 
   const [activeTab, setActiveTab] = useState("chat");
   const [displayedSummary, setDisplayedSummary] = useState("");
+  const [displayedNotes, setDisplayedNotes] = useState("");
 
   useEffect(() => {
     if (!summary) return;
@@ -32,6 +33,27 @@ function Tabs({ transcript, loadingTranscript, summary, loadingSummary,fetchSumm
 
     return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
   };
+
+  useEffect(() => {
+    if(!notes) return;
+
+    let index = 1;
+    setDisplayedNotes("");
+
+    const interval = setInterval(() => {
+      setDisplayedNotes(
+        notes.slice(0, index)
+      );
+
+      index++;
+
+      if(index > notes.length) {
+        clearInterval(interval);
+      }
+    }, 10);
+
+    return () => clearInterval(interval);
+  },[notes]);
 
   const groupTranscript = (transcript) => {
     const grouped = [];
@@ -68,7 +90,7 @@ function Tabs({ transcript, loadingTranscript, summary, loadingSummary,fetchSumm
         <button className={activeTab === "chat" ? "active" : ""} onClick={() => setActiveTab("chat")}>Chat</button>
         <button className={activeTab === "summary" ? "active" : ""} onClick={() => {setActiveTab("summary"); if(!loadingSummary){fetchSummary();}}}>Summary</button>
         <button className={activeTab === "transcript" ? "active" : ""} onClick={() => setActiveTab("transcript")}>Transcript</button>
-        <button className={activeTab === "notes" ? "active" : ""} onClick={() => setActiveTab("notes")}>Notes</button>
+        <button className={activeTab === "notes" ? "active" : ""} onClick={() => {setActiveTab("notes"); fetchNotes();}}>Notes</button>
       </div>
 
       <div>
@@ -113,7 +135,20 @@ function Tabs({ transcript, loadingTranscript, summary, loadingSummary,fetchSumm
             )}
           </div>
         )}
-        {activeTab === "notes" && <p>Notes coming soon...</p>}
+        {activeTab === "notes" && (
+          <div className="summary-container">
+            {loadingNotes ? (
+              <div className="summary-loading">
+                <div className="loader"></div>
+                <p>Generating Notes...</p>
+              </div>
+            ) : notes ? (
+              <div className="summary-text"><ReactMarkdown>{displayedNotes}</ReactMarkdown></div>
+            ) : (
+              <p>Try Again...</p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

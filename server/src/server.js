@@ -157,7 +157,52 @@ app.post("/api/video/summary", async (req, res) => {
             message: "Failed to generate summary",
         });
     }
-})
+});
+
+app.post("/api/video/notes", async (req, res) => {
+    try {
+
+        const { transcript } = req.body;
+
+        if(!transcript) {
+            return res.status(400).json({
+                success: false,
+                message: "Transcript is required"
+            });
+        }
+
+        const model = genAI.getGenerativeModel({
+            model: "gemini-2.5-flash",
+        });
+
+        const prompt = `
+        Create detailed study notes from the following YouTube transcript.
+        
+        Format:
+        #Main Concepts
+        #Detailed Notes
+        #Important Takeaways
+        #Quick Revision Points
+        
+        Transcript:
+        ${transcript}
+        `;
+
+        const result = await model.generateContent(prompt);
+        const notes = result.response.text();
+        return res.json({
+            success: true,
+            notes,
+        });
+    } catch (error) {
+        console.error(error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Failed to generate notes",
+        });
+    }
+});
 
 app.listen(5000, () => {
     console.log("Server runnning on port 5000");

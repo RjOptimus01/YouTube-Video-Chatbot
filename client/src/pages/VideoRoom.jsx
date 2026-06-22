@@ -13,6 +13,8 @@ function VideoRoom() {
     const [loadingTranscript, setLoadingTranscript] = useState(false);
     const [summary, setSummary] = useState("");
     const [loadingSummary, setLoadingSummary] = useState(false);
+    const [notes, setNotes] = useState("");
+    const [loadingNotes, setLoadingNotes] = useState(false);
     const playerRef = useRef(null);
     const location = useLocation();
     const videoUrl = location.state?.videoUrl;
@@ -69,6 +71,31 @@ function VideoRoom() {
         }
     };
 
+    const fetchNotes = async () => {
+        if (!transcript.length) return;
+
+        if (notes) return;
+
+        try {
+            setLoadingNotes(true);
+            const transcriptText = transcript
+                .map(item => item.text)
+                .join(" ");
+
+            const response = await api.post("/video/notes", {
+                transcript: transcriptText,
+            });
+
+            if (response.data.success) {
+                setNotes(response.data.notes);
+            }
+        } catch (error) {
+            console.log("Notes Error : ", error);
+        } finally {
+            setLoadingNotes(false);
+        }
+    };
+
     return (
         <>
             <NavBar />
@@ -79,7 +106,15 @@ function VideoRoom() {
                 </div>
 
                 <div className="right-panel">
-                    <Tabs transcript={transcript} loadingTranscript={loadingTranscript} summary={summary} loadingSummary={loadingSummary} fetchSummary={fetchSummary} playerRef={playerRef}></Tabs>
+                    <Tabs transcript={transcript}
+                        loadingTranscript={loadingTranscript}
+                        summary={summary}
+                        loadingSummary={loadingSummary}
+                        fetchSummary={fetchSummary}
+                        notes={notes}
+                        loadingNotes={loadingNotes}
+                        fetchNotes={fetchNotes}
+                        playerRef={playerRef}></Tabs>
                 </div>
             </div>
         </>
