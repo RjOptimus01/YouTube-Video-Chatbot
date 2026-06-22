@@ -11,7 +11,7 @@ function Home() {
             <h1>Chat with any YouTube video</h1>
 
             <p>
-                ChatTube allows you to chat with YouTube videos
+                QueryTube allows you to chat with YouTube videos
                 in real-time using AI.
             </p>
 

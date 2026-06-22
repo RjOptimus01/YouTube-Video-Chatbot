@@ -3,7 +3,7 @@ import "../styles/home.css";
 function NavBar() {
     return (
         <nav>
-            <div>ChatTube</div>
+            <div>QueryTube</div>
 
             <ul>
                 <li>Features</li>
