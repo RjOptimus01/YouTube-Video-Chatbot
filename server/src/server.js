@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv"
 import axios from "axios";
+import connectDB from "./config/db.js";
+import Chat from "./models/Chat.js";
 import { YoutubeTranscript } from "youtube-transcript";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
@@ -203,6 +205,89 @@ app.post("/api/video/notes", async (req, res) => {
         });
     }
 });
+
+app.post("/api/video/chat", async (req, res) => {
+    try {
+
+        const {videoId, transcript, question} = req.body;
+
+        if(!transcript || !question){
+            return res.status(400).json({
+                success: false,
+                message: "Transcript and question are required",
+            });
+        }
+
+        const model = genAI.getGenerativeModel({
+            model: "gemini-2.5-flash",
+        });
+
+
+        const prompt = `
+        You are an AI assistant.
+        
+        Answer ONLY using the information present in the transcript.
+        
+        Transcript:
+        ${transcript}
+        
+        Question:
+        ${question}
+        `;
+
+        const result = await model.generateContent(prompt);
+
+        const answer = result.response.text();
+
+        let chat = await Chat.findOne({
+            videoId
+        });
+
+        if(!chat) {
+            chat = new Chat({
+                videoId,
+                messages: []
+            });
+        }
+
+        chat.messages.push({
+            role: "user",
+            text: question
+        });
+
+        chat.messages.push({
+            role: "assistant",
+            text: answer
+        });
+
+        await chat.save();
+
+        return res.json({
+            success: true,
+            answer,
+        });
+    } catch (error) {
+        console.error(error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Failed to generate answer",
+        });
+    }
+});
+
+app.get("/api/video/chat/:videoId", async (req, res) => {
+    const chat = await Chat.findOne({
+        videoId: req.params.videoId
+    });
+
+    res.json({
+        success: true,
+        messages: chat?.messages || []
+    });
+});
+
+connectDB();
 
 app.listen(5000, () => {
     console.log("Server runnning on port 5000");

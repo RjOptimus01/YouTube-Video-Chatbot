@@ -1,6 +1,6 @@
 import "../styles/videoRoom.css"
 
-function VideoPlayer({ video }) {
+function VideoPlayer({ video, playerRef }) {
 
   if (!video) {
     return (
@@ -12,9 +12,10 @@ function VideoPlayer({ video }) {
   return (
     <div className="video-player">
       <iframe
+        id="youtube-player"
         width="100%"
         height="450"
-        src={`https://www.youtube.com/embed/${video.videoId}`}
+        src={`https://www.youtube.com/embed/${video.videoId}?enablejsapi=1`}
         title="YouTube video player"
         allowFullScreen
       ></iframe>

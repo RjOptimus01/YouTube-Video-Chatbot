@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import api from "../services/api";
 import { useLocation } from "react-router-dom";
+import { jsPDF } from "jspdf";
 
 import NavBar from "../components/Navbar";
 import VideoPlayer from "../components/VideoPlayer";
@@ -15,6 +16,8 @@ function VideoRoom() {
     const [loadingSummary, setLoadingSummary] = useState(false);
     const [notes, setNotes] = useState("");
     const [loadingNotes, setLoadingNotes] = useState(false);
+    const [messages, setMessages] = useState([]);
+    const [loadingChat, setLoadingChat] = useState(false);
     const playerRef = useRef(null);
     const location = useLocation();
     const videoUrl = location.state?.videoUrl;
@@ -96,6 +99,106 @@ function VideoRoom() {
         }
     };
 
+    const sendMessage = async (question) => {
+        if (!question.trim()) {
+            return;
+        }
+
+        const userMessage = {
+            role: "user",
+            text: question
+        };
+
+        setMessages(prev => [...prev, userMessage]);
+
+        try {
+            setLoadingChat(true);
+            const transcriptText = transcript
+                .map(item => item.text)
+                .join(" ");
+
+            const response = await api.post("/video/chat", {
+                videoId: video.videoId,
+                transcript: transcriptText,
+                question
+            });
+
+            const aiMessage = {
+                role: "assistant",
+                text: response.data.answer,
+            }
+
+            setMessages(prev => [...prev, aiMessage]);
+        } catch (error) {
+            console.log(error);
+        } finally {
+            setLoadingChat(false);
+        }
+    };
+
+    const copySummary = async () => {
+        try {
+            await navigator.clipboard.writeText(summary);
+            alert("Summary copied!");
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    const copyNotes = async () => {
+        try {
+            await navigator.clipboard.writeText(notes);
+            alert("Notes copied!");
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    const downloadNotes = () => {
+        const doc = new jsPDF();
+        doc.setFontSize(12);
+        const lines = doc.splitTextToSize(notes, 100);
+        doc.text(lines, 10, 10);
+        doc.save("youtube-notes.pdf");
+    }
+
+    useEffect(() => {
+        if (!video?.videoId) return;
+
+        const initializePlayer = () => {
+            playerRef.current = new window.YT.Player("youtube-player", {
+                events: {
+                    onReady: () => {
+                        console.log("Player Ready");
+                    }
+                }
+            });
+        };
+
+        if (window.YT && window.YT.Player) {
+            initializePlayer();
+        } else {
+            const tag = document.createElement("script");
+            tag.src = "https://www.youtube.com/iframe_api";
+            document.body.appendChild(tag);
+
+            window.onYouTubeIframeAPIReady = initializePlayer;
+        }
+    }, [video]);
+
+    useEffect(() => {
+        const loadChat = async () => {
+            if(!video?.videoId) return;
+
+            const response = await api.get(`/video/chat/${video.videoId}`);
+
+            if(response.data.success){
+                setMessages(response.data.messages);
+            }
+        };
+        loadChat();
+    }, [video]);
+
     return (
         <>
             <NavBar />
@@ -114,6 +217,12 @@ function VideoRoom() {
                         notes={notes}
                         loadingNotes={loadingNotes}
                         fetchNotes={fetchNotes}
+                        messages={messages}
+                        loadingChat={loadingChat}
+                        sendMessage={sendMessage}
+                        copySummary={copySummary}
+                        copyNotes={copyNotes}
+                        downloadNotes={downloadNotes}
                         playerRef={playerRef}></Tabs>
                 </div>
             </div>

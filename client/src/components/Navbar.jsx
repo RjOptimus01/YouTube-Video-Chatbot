@@ -1,20 +1,19 @@
 import "../styles/home.css";
 
-function NavBar() {
-    return (
-        <nav>
-            <div>QueryTube</div>
+function Navbar() {
+  return (
+    <nav className="navbar">
+      <div className="logo">
+        QueryTube
+      </div>
 
-            <ul>
-                <li>Features</li>
-                <li>Pricing</li>
-                <li>FAQs</li>
-                <li>Support</li>
-            </ul>
-
-            <div>Profile</div>
-        </nav>
-    );
+      <div className="nav-links">
+        <a href="#">Home</a>
+        <a href="#">Recent Chats</a>
+        <a href="#">About</a>
+      </div>
+    </nav>
+  );
 }
 
-export default NavBar;
+export default Navbar;

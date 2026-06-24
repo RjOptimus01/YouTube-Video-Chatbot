@@ -1,6 +1,9 @@
 {
   "dependencies": {
+    "jspdf": "^4.2.1",
+    "mongoose": "^9.7.2",
     "react-markdown": "^10.1.0",
+    "react-player": "^3.4.0",
     "react-youtube": "^10.1.0"
   }
 }

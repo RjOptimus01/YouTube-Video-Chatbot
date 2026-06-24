@@ -1,7 +1,8 @@
 import "../styles/videoRoom.css"
 import React, { useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
-function Tabs({ transcript, loadingTranscript, summary, loadingSummary,fetchSummary, notes, loadingNotes, fetchNotes, playerRef }) {
+import ChatTab from "./ChatTab";
+function Tabs({ transcript, loadingTranscript, summary, loadingSummary, fetchSummary, notes, loadingNotes, fetchNotes, messages, loadingChat, sendMessage, copySummary, copyNotes, downloadNotes, playerRef }) {
 
   const [activeTab, setActiveTab] = useState("chat");
   const [displayedSummary, setDisplayedSummary] = useState("");
@@ -35,7 +36,7 @@ function Tabs({ transcript, loadingTranscript, summary, loadingSummary,fetchSumm
   };
 
   useEffect(() => {
-    if(!notes) return;
+    if (!notes) return;
 
     let index = 1;
     setDisplayedNotes("");
@@ -47,13 +48,13 @@ function Tabs({ transcript, loadingTranscript, summary, loadingSummary,fetchSumm
 
       index++;
 
-      if(index > notes.length) {
+      if (index > notes.length) {
         clearInterval(interval);
       }
     }, 10);
 
     return () => clearInterval(interval);
-  },[notes]);
+  }, [notes]);
 
   const groupTranscript = (transcript) => {
     const grouped = [];
@@ -88,13 +89,15 @@ function Tabs({ transcript, loadingTranscript, summary, loadingSummary,fetchSumm
     <div className="tab-content">
       <div className="tabs">
         <button className={activeTab === "chat" ? "active" : ""} onClick={() => setActiveTab("chat")}>Chat</button>
-        <button className={activeTab === "summary" ? "active" : ""} onClick={() => {setActiveTab("summary"); if(!loadingSummary){fetchSummary();}}}>Summary</button>
+        <button className={activeTab === "summary" ? "active" : ""} onClick={() => { setActiveTab("summary"); if (!loadingSummary) { fetchSummary(); } }}>Summary</button>
         <button className={activeTab === "transcript" ? "active" : ""} onClick={() => setActiveTab("transcript")}>Transcript</button>
-        <button className={activeTab === "notes" ? "active" : ""} onClick={() => {setActiveTab("notes"); fetchNotes();}}>Notes</button>
+        <button className={activeTab === "notes" ? "active" : ""} onClick={() => { setActiveTab("notes"); fetchNotes(); }}>Notes</button>
       </div>
 
       <div>
-        {activeTab === "chat" && <p>Chat UI coming soon...</p>}
+        {activeTab === "chat" && (
+          <ChatTab messages={messages} loadingChat={loadingChat} sendMessage={sendMessage} />
+        )}
         {activeTab === "summary" && (
           <div className="summary-container">
 
@@ -104,9 +107,12 @@ function Tabs({ transcript, loadingTranscript, summary, loadingSummary,fetchSumm
                 <p>Generating Summary...</p>
               </div>
             ) : summary ? (
-              <div className="summary-text"><ReactMarkdown>{displayedSummary}</ReactMarkdown></div>
+              <>
+                <button className="copy-btn" onClick={copySummary}>Copy</button>
+                <div className="summary-text"><ReactMarkdown>{displayedSummary}</ReactMarkdown></div>
+              </>
             ) : (
-              <p>Generating summary...</p>
+              <p>Limit exceeds... Please try again after sometime...</p>
             )}
           </div>
         )}
@@ -118,7 +124,11 @@ function Tabs({ transcript, loadingTranscript, summary, loadingSummary,fetchSumm
               groupedTranscript.map((item, index) => (
                 <div key={index} className="transcript-item">
 
-                  <span className="transcript-time">{formatTime(item.time / 1000)}</span>
+                  <span className="transcript-time" onClick={() => {
+                    if (playerRef.current) {
+                      playerRef.current.seekTo(item.time / 1000, true)
+                    }
+                  }}>{formatTime(item.time / 1000)}</span>
 
                   <div className="timeline-column">
                     <div className="timeline-dot"></div>
@@ -143,9 +153,15 @@ function Tabs({ transcript, loadingTranscript, summary, loadingSummary,fetchSumm
                 <p>Generating Notes...</p>
               </div>
             ) : notes ? (
-              <div className="summary-text"><ReactMarkdown>{displayedNotes}</ReactMarkdown></div>
+              <>
+                <div className="notes-action">
+                  <button className="copy-btn" onClick={copyNotes}>Copy</button>
+                  <button className="pdf-btn" onClick={downloadNotes}>Export PDF</button>
+                </div>
+                <div className="summary-text"><ReactMarkdown>{displayedNotes}</ReactMarkdown></div>
+              </>
             ) : (
-              <p>Try Again...</p>
+              <p>Limit exceeds... Please try again after sometime...</p>
             )}
           </div>
         )}
